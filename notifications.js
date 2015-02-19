@@ -13,9 +13,29 @@ Notifications = (function(){
   var click = function(id){
     var notification = findNotificationById(id);
     if (notification){
-      chrome.tabs.create({
-        url: "https://app.groupme.com/chats/" + notification.groupId
-      }, function(tab) {});
+	  var newURL = "https://app.groupme.com/chats/" + notification.groupId;
+	  var host = parseUri(url).host;
+	  var x = -1;
+	  var matchedTab;
+	  chrome.tabs.query({}, function(tabs) {
+		var arrayLength = tabs.length;
+		for (var i = 0; i < arrayLength; i++) {
+			if(parseUri(tabs[i].url) === host) { // check if existing
+			  x = i;
+			  matchedTab = tabs[i];
+			  break;
+			}
+				
+		}
+	  });
+	  if(x < 0){
+		chrome.tabs.create({
+		  url: newURL
+		}, function(tab) {});
+	  }
+	  else{
+	    chrome.tabs.update(matchedTab.windowID, {"focused": true});
+	  }
     }
   };
   chrome.notifications.onClicked.addListener(click);
